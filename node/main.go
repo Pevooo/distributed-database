@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Request struct {
@@ -29,7 +29,9 @@ var allNodes []string
 func isDatabaseOperation(query string) bool {
 	query = strings.ToUpper(strings.TrimSpace(query))
 	return strings.HasPrefix(query, "CREATE DATABASE") ||
-		strings.HasPrefix(query, "DROP DATABASE")
+		strings.HasPrefix(query, "DROP DATABASE") ||
+		strings.HasPrefix(query, "CREATE TABLE")||
+        strings.HasPrefix(query, "DROP TABLE")
 }
 
 func replicate(req Request, sourceNode string) {
@@ -136,6 +138,7 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 func main() {
 	var err error
 	n, err := strconv.Atoi(os.Args[1])
+    nodes, err := strconv.Atoi(os.Args[2])
 	if err != nil || n <= 0 {
 		log.Fatal("Invalid database number")
 	}
@@ -145,13 +148,13 @@ func main() {
 
 	// Set up all node addresses
 	allNodes = append(allNodes, masterAddr) // Add master
-	for i := 1; i <= n; i++ {
+	for i := 1; i <= nodes; i++ {
 		addr := fmt.Sprintf("http://localhost:%d", 8080+i)
 		allNodes = append(allNodes, addr)
 	}
 
 	dbName := fmt.Sprintf("slave%d.db", n)
-	db, err = sql.Open("sqlite3", dbName)
+	db, err = sql.Open("sqlite", "file:"+dbName)
 	if err != nil {
 		log.Fatal(err)
 	}

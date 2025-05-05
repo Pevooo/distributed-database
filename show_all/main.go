@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"os"
 	
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 		dbPath := fmt.Sprintf(dbPathFormat, i)
 		fmt.Printf("\n🔍 Querying %s\n", dbPath)
 
-		db, err := sql.Open("sqlite3", dbPath)
+		db, err := sql.Open("sqlite", "file:"+dbPath)
 		if err != nil {
 			log.Printf("❌ Failed to open %s: %v\n", dbPath, err)
 			continue
