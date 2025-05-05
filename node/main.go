@@ -37,6 +37,7 @@ func isDatabaseOperation(query string) bool {
 func replicate(req Request, sourceNode string) {
 	// Set the replicated flag to prevent re-replication
 	req.IsReplicated = true
+    req.IsMaster = false
 	body, _ := json.Marshal(req)
 
 	// Replicate to all nodes except the source
@@ -71,7 +72,7 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if it's a database operation
-	if isDatabaseOperation(req.Query) {
+	if isDatabaseOperation(req.Query) && !req.IsMaster {
 		http.Error(w, "Slave nodes cannot perform database operations", http.StatusForbidden)
 		return
 	}

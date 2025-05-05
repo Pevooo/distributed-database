@@ -35,6 +35,7 @@ func generateSlaves(n int, startPort int) []string {
 
 func replicate(req Request) {
 	req.IsReplicated = true
+    req.IsMaster =true
 	body, _ := json.Marshal(req)
 	for _, slave := range slaves {
 		resp, err := http.Post(slave+"/query", "application/json", bytes.NewBuffer(body))
@@ -56,8 +57,8 @@ func isDatabaseOperation(query string) bool {
 	query = strings.ToUpper(strings.TrimSpace(query))
 	return strings.HasPrefix(query, "CREATE DATABASE") ||
 		strings.HasPrefix(query, "DROP DATABASE") ||
-		strings.HasPrefix(query, "CREATE TABLE") ||
-		strings.HasPrefix(query, "DROP TABLE")
+		strings.HasPrefix(query, "CREATE TABLE")||
+        strings.HasPrefix(query, "DROP TABLE")
 }
 
 func handleQuery(w http.ResponseWriter, r *http.Request) {
@@ -68,23 +69,6 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		fmt.Println("Received request:", req)
-	}
-
-	// Check if it's a database operation
-	if isDatabaseOperation(req.Query) {
-		if !req.IsMaster {
-			http.Error(w, "Only master can perform database operations", http.StatusForbidden)
-			return
-		}
-		// Execute database operation only on master
-		_, err := db.Exec(req.Query, req.Params...)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-		fmt.Fprintln(w, "Database operation successful")
-		return
 	}
 
 	// Handle regular queries
@@ -134,7 +118,7 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Only replicate if it's not a database operation and not already replicated
-	if !isDatabaseOperation(req.Query) && !req.IsReplicated {
+	if !req.IsReplicated {
 		replicate(req)
 	}
 }

@@ -21,7 +21,7 @@ func sendQuery(req DBRequest) error {
 		return fmt.Errorf("failed to marshal request: %v", err)
 	}
 
-	resp, err := http.Post("http://localhost:8081/query", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post("http://localhost:8080/query", "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("failed to send request: %v", err)
 	}
@@ -52,7 +52,7 @@ func main() {
 	insertReq := DBRequest{
 		Command: "exec",
 		Query:   "INSERT INTO users (username, email) VALUES (?, ?)",
-		Params:  []interface{}{"test_user_2", "test@example.com"},
+		Params:  []interface{}{"test_user_3", "test@example.com"},
 	}
 	if err := sendQuery(insertReq); err != nil {
 		fmt.Printf("❌ Failed to insert data: %v\n", err)
