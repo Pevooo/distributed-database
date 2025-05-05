@@ -9,6 +9,7 @@ import (
     "log"
     "strconv"
     "os"
+    "strings"
 
     _ "github.com/mattn/go-sqlite3"
 )
@@ -17,6 +18,7 @@ type Request struct {
     Command string            `json:"command"`
     Query   string            `json:"query,omitempty"`
     Params  []interface{}     `json:"params,omitempty"`
+    IsMaster bool            `json:"is_master,omitempty"`
 }
 
 var slaves []string
@@ -49,6 +51,12 @@ func replicate(req Request) {
     }
 }
 
+func isDatabaseOperation(query string) bool {
+    query = strings.ToUpper(strings.TrimSpace(query))
+    return strings.HasPrefix(query, "CREATE DATABASE") || 
+           strings.HasPrefix(query, "DROP DATABASE")
+}
+
 func handleQuery(w http.ResponseWriter, r *http.Request) {
     var req Request
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -58,6 +66,24 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
     } else {
         fmt.Println("Received request:", req)
     }
+
+    // Check if it's a database operation
+    if isDatabaseOperation(req.Query) {
+        if !req.IsMaster {
+            http.Error(w, "Only master can perform database operations", http.StatusForbidden)
+            return
+        }
+        // Execute database operation only on master
+        _, err := db.Exec(req.Query, req.Params...)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        fmt.Fprintln(w, "Database operation successful")
+        return
+    }
+
+    // Handle regular queries
     switch req.Command {
     case "exec":
         _, err := db.Exec(req.Query, req.Params...)
@@ -103,7 +129,10 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unsupported command", http.StatusBadRequest)
     }
 
-    replicate(req) // Replicate the request to all slaves
+    // Only replicate if it's not a database operation
+    if !isDatabaseOperation(req.Query) {
+        replicate(req)
+    }
 }
 
 
