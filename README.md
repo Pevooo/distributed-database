@@ -46,6 +46,16 @@ We can send a simple json to the master to create a table:
 
 This command will create a table with an `id` as a primary key, a unique text username, and a `created_at` tmiestamp with the current time. Note that this command will fail if we try to send the same json to a slave instead of the master. We can easily send this json to the master by sending it to `localhost:8080` which is the address of the master. After executing this request, the master will automatically send a previllaged replicated request to the slaves indicating that they have to create the same table with the same attributes and constraints.
 
+## Project Structure
+```text
+distributed-database/
+|----- send_dummy.go
+|----- show_all/main.go
+|----- node/main.go
+|----- master/main.go
+|----- README.md
+```
+
 ## Files
 
 1. `master/main.go`: The master file.
@@ -78,6 +88,11 @@ The query will be run on the master the replicated to the slaves ensuring consis
 The query will be run on this slave and replicated to the master and the rest of the slaves
 
 *Note that the replicated requests have a specific flag indicating that this request is replicated so that no extra replication happends*
+
+## Technology
+1. sqlite for the databse engine
+2. GoLang for the code and logic
+3. HTTP for communication between the master, slaves and external clients
 
 ## Authors
 
