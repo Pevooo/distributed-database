@@ -11,6 +11,10 @@ This is a basic distributed database system with a master node and slave nodes, 
 - HTTP communication between nodes
 - Simple schema and record operations
 
+## Prerequisites
+
+1. Go 1.16+
+
 ## How to Run
 
 1. Install dependencies:
