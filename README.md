@@ -78,3 +78,11 @@ The query will be run on the master the replicated to the slaves ensuring consis
 The query will be run on this slave and replicated to the master and the rest of the slaves
 
 *Note that the replicated requests have a specific flag indicating that this request is replicated so that no extra replication happends*
+
+## Authors
+
+1. Pavly Samuel
+2. John Ashraf
+3. Ahmed Aziz
+4. Abdelrahman Ayman
+5. Abdelrahman Abdelhameed
