@@ -48,11 +48,11 @@ This command will create a table with an `id` as a primary key, a unique text us
 
 ## Files
 
-3. `master/main.go`: The master file.
+1. `master/main.go`: The master file.
 
 2. `node/main.go`: The slave file.
 
-1. `show_all/main.go`: A helper file that may be used to view the databases of the master and slaves. Note that this file is not a part of the project. It's just a helper. You can easily run the file by executing the following command from the root directory of the project:
+3. `show_all/main.go`: A helper file that may be used to view the databases of the master and slaves. Note that this file is not a part of the project. It's just a helper. You can easily run the file by executing the following command from the root directory of the project:
 ```bash
 go run show_all/main.go <num_databases>
 ```
