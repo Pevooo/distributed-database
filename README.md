@@ -1,45 +1,80 @@
-# Distributed Database in Go
 
-## Overview
+# 🗄️ Distributed Database in Go 🚀
 
-This is a basic distributed database system with a master node and slave nodes, using Go and SQLite. Each node takes queries by sending a POST request to it. Slaves can't run database or table operations like `CREATE TABLE`, `CREATE DATABASE`, etc... . Each node (master or slave) has a separate database and sends the same query it gets to other nodes so that each database is a replica. In case of database or table queries, only the master node can process these queries and sends a previllaged query to the slaves so that the database it consistent across all nodes.
+## 📘 Overview
 
-## Features
+Welcome to **Distributed Database in Go**, a lightweight yet powerful project that simulates a distributed database system using **Go** and **SQLite**. This system is built with **replication** in mind—ensuring that every node (master or slave) maintains a **consistent copy** of the database. The nodes communicate through **HTTP POST** requests, making the system simple to interact with and easy to extend.
 
-- SQLite as the storage engine
-- Master replicates operations to slaves
-- HTTP communication between nodes
-- Simple schema and record operations
+### 🔑 Key Concepts
 
-## Prerequisites
+- 🧠 The **master node** processes **privileged operations** such as `CREATE TABLE`, and replicates them to the slaves.
+- 🧑‍🤝‍🧑 **Slave nodes** handle regular queries but cannot execute database or table creation commands.
+- 🧬 Every node (master or slave) maintains its own **replica** of the SQLite database.
+- 🔄 All nodes share a consistent state by replicating commands to each other.
 
-1. Go 1.16+
+---
 
-## How to Run
+## ✨ Features
 
-1. Install dependencies:
+- 🛢️ SQLite as the storage engine
+- 📡 HTTP-based communication between nodes
+- 👑 Master-slave architecture with replication
+- 🧪 Support for SQL operations (excluding DB creation)
+- 🧱 Schema and record-level operations
+- 🔐 Control over privileged queries via master authority
+
+---
+
+## 🔧 Prerequisites
+
+- ✅ [Go 1.16+](https://golang.org/dl/)
+
+---
+
+## 🚀 How to Run
+
+### 1. Install dependencies
 
 ```bash
 go mod tidy
 ```
 
-2. Run one or more slave nodes and give each slave a unique id starting from 1:
+### 2. Run Slave Nodes
+
+Each slave requires a unique ID (starting from 1) and the total number of slaves:
 
 ```bash
 go run node/main.go <slave_id> <num_slaves>
 ```
 
-3. Run master node (in another terminal):
+📌 Example:
+```bash
+go run node/main.go 1 2
+```
+
+### 3. Run Master Node
+
+In a separate terminal window:
 
 ```bash
 go run master/main.go <num_slaves>
 ```
 
-## How to Use
+📌 Example:
+```bash
+go run master/main.go 2
+```
 
-You can easily use the project by sending a post request to a slave or the master (each node has a replica of the database). We recommend using Postman for its user-friendly interface.
+---
 
-We can send a simple json to the master to create a table:
+## 🧪 How to Use
+
+Use Postman or any other API client to interact with your distributed database via HTTP POST requests. Every node hosts its own SQLite database that reflects all replicated operations.
+
+### ✅ Example: Create a Table
+
+Send this JSON to the **master node** (usually on `http://localhost:8080`):
+
 ```json
 {
   "command": "exec",
@@ -48,62 +83,76 @@ We can send a simple json to the master to create a table:
 }
 ```
 
-This command will create a table with an `id` as a primary key, a unique text username, and a `created_at` tmiestamp with the current time. Note that this command will fail if we try to send the same json to a slave instead of the master. We can easily send this json to the master by sending it to `localhost:8080` which is the address of the master. After executing this request, the master will automatically send a previllaged replicated request to the slaves indicating that they have to create the same table with the same attributes and constraints.
+⚠️ **Important:** This request will only work when sent to the **master**. If sent to a **slave**, it will be rejected as a privileged operation.
 
-## Project Structure
+✅ Once the master processes the request, it sends a **privileged replicated** version to all slaves so that their databases reflect the same schema.
+
+---
+
+## 📁 Project Structure
+
 ```text
 distributed-database/
-|----- send_dummy.go
-|----- show_all/main.go
-|----- node/main.go
-|----- master/main.go
-|----- README.md
-|----- go.sum
-|----- go.mod
+├── send_dummy.go           # Helper: Sends test POST requests
+├── show_all/main.go        # Helper: Shows all node databases
+├── node/main.go            # Slave node logic
+├── master/main.go          # Master node logic
+├── README.md
+├── go.sum
+└── go.mod
 ```
 
-## Files
+---
 
-1. `master/main.go`: The master file.
+## 📄 File Descriptions
 
-2. `node/main.go`: The slave file.
+- `master/main.go`: Contains logic for the master node—handles privileged queries and replication.
+- `node/main.go`: Logic for slave nodes—executes standard queries and receives replication from the master.
+- `show_all/main.go`: Utility to print all records from all nodes (for debugging/testing).
+  ```bash
+  go run show_all/main.go <num_databases>
+  ```
+  Replace `<num_databases>` with `num_slaves + 1`.
 
-3. `show_all/main.go`: A helper file that may be used to view the databases of the master and slaves. Note that this file is not a part of the project. It's just a helper. You can easily run the file by executing the following command from the root directory of the project:
-```bash
-go run show_all/main.go <num_databases>
-```
+- `send_dummy.go`: Sends HTTP POST requests programmatically (alternative to Postman).
 
-`num_databases` is basically the `number of slaves + 1` which indicates the number of slaves. Note that each node (master or slave) has its own replica database so the total number of databases is `number of slaves + 1`.
+---
 
-4. `send_dummy.go`: A helper file that we may use to send a post request without using postman. Note that it's not a part of the project, it's just a helper file. We recommend using postman
+## 🧠 System Logic
 
-## Logic
+### 🔐 Privileged Operations
 
-We define privileged operations as any operation that is related to creating or deleting of databases or tables
+Operations like `CREATE TABLE` are **privileged** and only allowed on the **master node**. Once processed, the master replicates these commands to slaves.
 
-### On Creating or Deleting a database
-This feature is not supported as we use sqlite, so we just bind to a database
+### 🔄 Query Replication Logic
 
-### On Creating or Deleting a table
-This is considered a privileged operation, so only the master can process this request and order the slaves to replicate it
+- 🧑‍💻 **Query sent to master** → executed → replicated to slaves.
+- 🧑‍🔧 **Query sent to slave** → executed → replicated to master and other slaves.
 
-### On running a simple query on master
-The query will be run on the master the replicated to the slaves ensuring consistent replicas of the databases at all time
+✔️ A flag is used in the JSON body to detect **replicated requests**, preventing infinite loops.
 
-### On running a simple query on a slave
-The query will be run on this slave and replicated to the master and the rest of the slaves
+---
 
-*Note that the replicated requests have a specific flag indicating that this request is replicated so that no extra replication happends*
+## ⚙️ Technologies Used
 
-## Technology
-1. sqlite for the databse engine
-2. GoLang for the code and logic
-3. HTTP for communication between the master, slaves and external clients
+- 🗃️ **SQLite** – Embedded database engine.
+- 🧬 **Go (Golang)** – Main programming language for logic and HTTP handling.
+- 🌐 **HTTP** – Communication between nodes and external clients.
 
-## Authors
+---
 
-1. Pavly Samuel
-2. John Ashraf
-3. Ahmed Aziz
-4. Abdelrahman Ayman
-5. Abdelrahman Abdelhameed
+## 👨‍💻 Authors
+
+- Pavly Samuel
+- John Ashraf
+- Ahmed Aziz
+- Abdelrahman Ayman
+- Abdelrahman Abdelhameed
+
+---
+
+## ❤️ Acknowledgments
+
+Thanks to the entire team for building and documenting this educational distributed system project! 🙌
+
+---
