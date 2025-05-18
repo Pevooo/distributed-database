@@ -60,3 +60,21 @@ go run show_all/main.go <num_databases>
 `num_databases` is basically the `number of slaves + 1` which indicates the number of slaves. Note that each node (master or slave) has its own replica database so the total number of databases is `number of slaves + 1`.
 
 4. `send_dummy.go`: A helper file that we may use to send a post request without using postman. Note that it's not a part of the project, it's just a helper file. We recommend using postman
+
+## Logic
+
+We define privileged operations as any operation that is related to creating or deleting of databases or tables
+
+### On Creating or Deleting a database
+This feature is not supported as we use sqlite, so we just bind to a database
+
+### On Creating or Deleting a table
+This is considered a privileged operation, so only the master can process this request and order the slaves to replicate it
+
+### On running a simple query on master
+The query will be run on the master the replicated to the slaves ensuring consistent replicas of the databases at all time
+
+### On running a simple query on a slave
+The query will be run on this slave and replicated to the master and the rest of the slaves
+
+*Note that the replicated requests have a specific flag indicating that this request is replicated so that no extra replication happends*
