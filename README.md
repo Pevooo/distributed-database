@@ -54,6 +54,8 @@ distributed-database/
 |----- node/main.go
 |----- master/main.go
 |----- README.md
+|----- go.sum
+|----- go.mod
 ```
 
 ## Files
