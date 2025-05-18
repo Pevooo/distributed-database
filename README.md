@@ -101,7 +101,27 @@ distributed-database/
 ├── go.sum
 └── go.mod
 ```
+## Project Archeticture
 
++-------------------------------------------------------+
+|                      Master Node                      |
+|                                                       |
+| - Privileged Instructions                            |
+| - Broadcast to Slaves                                |
+|                                                       |
++-------------------------------------------------------+
+                            |
+                            |
+              +-------------+-------------+
+              |                           |
+              |                           |
++-------------+-------------+   +---------+-------------+
+|         Slave Node        |   |       Slave Node       |
+|                           |   |                        |
+| - Standard Access DB      |   | - Standard Access DB   |
+| - Broadcast to All        |   | - Broadcast to All     |
+|                           |   |                        |
++---------------------------+   +------------------------+
 ---
 
 ## 📄 File Descriptions
